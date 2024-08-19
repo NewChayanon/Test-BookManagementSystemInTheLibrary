@@ -9,4 +9,6 @@ bookService.createBookByData = (data) => prisma.book.create({ data });
 bookService.updateBookByIdAndData = (id, data) =>
   prisma.book.update({ where: { id }, data });
 
+bookService.deleteBookById = (id) => prisma.book.delete({ where: { id } });
+
 module.exports = bookService;

@@ -5,5 +5,6 @@ const adminRouter = express.Router();
 
 adminRouter.post("/books",createBookValidator,adminController.createBook)
 adminRouter.put("/books/:bookId",editBookValidator,adminController.editBook)
+adminRouter.delete("/books/:bookId",adminController.deleteBook)
 
 module.exports = adminRouter;

@@ -7,11 +7,13 @@ const { createBookValidator } = require("../middlewares/validator");
 const adminController = require("../controllers/admin-controller");
 const { errorMiddleware } = require("../middlewares/errorMiddleware");
 const bookService = require("../services/book-service");
+const borrowingService = require("../services/borrowing-service");
 
 const app = express();
 app.use(express.json());
 
 jest.mock("../services/book-service");
+jest.mock("../services/borrowing-service");
 jest.mock("../middlewares/authenticate");
 jest.mock("../middlewares/isAdmin");
 
@@ -30,6 +32,8 @@ app.put(
   createBookValidator,
   adminController.editBook
 );
+
+app.delete("/admin/books/:bookId", authenticate, isAdmin, adminController.deleteBook);
 
 app.use(errorMiddleware);
 
@@ -246,3 +250,74 @@ describe("PUT /admin/books/:bookId", () => {
     expect(response.body).toHaveProperty("message");
   });
 });
+
+describe("DELETE /admin/books/:bookId", () => {
+    it("should delete a book successfully", async () => {
+      const bookId = 1;
+  
+      // Mocking the book and borrowing services
+      bookService.findBookById.mockResolvedValue({ id: bookId, title: "Test Book" });
+      borrowingService.findFirstBorrowingByBookIdAndReturnedAt.mockResolvedValue(null);
+      bookService.deleteBookById.mockResolvedValue();
+      borrowingService.deleteManyBorrowingByBookId.mockResolvedValue();
+  
+      const response = await request(app)
+        .delete(`/admin/books/${bookId}`)
+        .set("Authorization", "Bearer validAdminToken");
+  
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("message", "Book deleted successfully");
+    });
+  
+    it("should return 400 if bookId is not provided", async () => {
+      const response = await request(app)
+        .delete(`/admin/books/${undefined}`)
+        .set("Authorization", "Bearer validAdminToken");
+  
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("message", "Book id is required");
+    });
+  
+    it("should return 404 if the book does not exist", async () => {
+      const bookId = 1;
+  
+      // Mocking findBookById to return null
+      bookService.findBookById.mockResolvedValue(null);
+  
+      const response = await request(app)
+        .delete(`/admin/books/${bookId}`)
+        .set("Authorization", "Bearer validAdminToken");
+  
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty("message", "Book not found");
+    });
+  
+    it("should return 400 if the book is currently borrowed", async () => {
+      const bookId = 1;
+  
+      // Mocking the book and borrowing services
+      bookService.findBookById.mockResolvedValue({ id: bookId, title: "Test Book" });
+      borrowingService.findFirstBorrowingByBookIdAndReturnedAt.mockResolvedValue({ id: 1 });
+  
+      const response = await request(app)
+        .delete(`/admin/books/${bookId}`)
+        .set("Authorization", "Bearer validAdminToken");
+  
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("message", "Book is borrowed, cannot delete");
+    });
+  
+    it("should return 500 on any other errors", async () => {
+      const bookId = 1;
+  
+      // Mocking findBookById to throw an error
+      bookService.findBookById.mockRejectedValue(new Error("Internal Server Error"));
+        
+      const response = await request(app)
+        .delete(`/admin/books/${bookId}`)
+        .set("Authorization", "Bearer validAdminToken");
+  
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty("message", "Internal Server Error");
+    });
+  });
