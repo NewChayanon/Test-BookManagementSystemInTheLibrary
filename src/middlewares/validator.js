@@ -1,4 +1,5 @@
 const { createError } = require("../utils/createError");
+const { createBook } = require("../validators/admin-validator");
 const { register, login } = require("../validators/auth-validator");
 
 exports.registerValidator = (req, res, next) => {
@@ -18,3 +19,12 @@ exports.loginValidator = (req, res, next) => {
   req.input = value;
   next();
 };
+
+exports.createBookValidator = (req, res, next) => {
+  const { value, error } = createBook.validate(req.body)
+  if (error) {
+    createError(400, error.details[0].message)
+  }
+    req.book = value;
+    next()
+  }

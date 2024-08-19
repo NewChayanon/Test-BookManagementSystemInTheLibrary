@@ -6,6 +6,8 @@ const authRouter = require("./routes/auth-router");
 const { errorMiddleware } = require("./middlewares/errorMiddleware");
 const { authenticate } = require("./middlewares/authenticate");
 const userRouter = require("./routes/user-router");
+const { isAdmin } = require("./middlewares/isAdmin");
+const adminRouter = require("./routes/admin-router");
 
 const app = express();
 
@@ -13,8 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRouter);
-app.use("/users",authenticate, userRouter)
-
+app.use("/users", authenticate, userRouter);
+app.use("/admin", authenticate,isAdmin,adminRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
