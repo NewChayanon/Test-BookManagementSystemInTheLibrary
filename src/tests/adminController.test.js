@@ -24,7 +24,7 @@ app.post(
 );
 
 app.put(
-  "/books/:bookId",
+  "/admin/books/:bookId",
   authenticate,
   isAdmin,
   createBookValidator,
@@ -124,7 +124,7 @@ describe("POST /admin/books", () => {
   });
 });
 
-describe("PUT /books/:bookId", () => {
+describe("PUT /admin/books/:bookId", () => {
   it("should update the book successfully if the user is authenticated and an admin", async () => {
     const bookId = 1;
     const bookData = {
@@ -154,7 +154,7 @@ describe("PUT /books/:bookId", () => {
       ...bookData,
     });
 
-    const response = await request(app).put(`/books/${bookId}`).send(bookData);
+    const response = await request(app).put(`/admin/books/${bookId}`).send(bookData);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       id: bookId,
@@ -185,7 +185,7 @@ describe("PUT /books/:bookId", () => {
     // Mock findBookById to return null, meaning the book is not found
     bookService.findBookById.mockResolvedValue(null);
 
-    const response = await request(app).put(`/books/${bookId}`).send(bookData);
+    const response = await request(app).put(`/admin/books/${bookId}`).send(bookData);
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty("message", "Book not found");
   });
@@ -210,7 +210,7 @@ describe("PUT /books/:bookId", () => {
       next();
     });
 
-    const response = await request(app).put(`/books/${bookId}`).send(bookData); // No bookId provided
+    const response = await request(app).put(`/admin/books/${bookId}`).send(bookData); // No bookId provided
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("message", "Book id is required");
   });
@@ -241,7 +241,7 @@ describe("PUT /books/:bookId", () => {
     // Mock updateBookByIdAndData to throw an error
     bookService.updateBookByIdAndData.mockRejectedValue(new Error("Database error"));
 
-    const response = await request(app).put(`/books/${bookId}`).send(bookData);
+    const response = await request(app).put(`/admin/books/${bookId}`).send(bookData);
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message");
   });

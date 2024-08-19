@@ -10,6 +10,7 @@ const { errorMiddleware } = require("../middlewares/errorMiddleware");
 const jwtService = require("../services/jwt-service");
 const { authenticate } = require("../middlewares/authenticate");
 const userController = require("../controllers/user-controller");
+const bookService = require("../services/book-service");
 
 const app = express();
 app.use(express.json());
@@ -17,10 +18,11 @@ app.use(express.json());
 jest.mock("../services/user-service");
 jest.mock("../services/hash-service");
 jest.mock("../services/jwt-service");
+jest.mock("../services/book-service");
 
 app.post("/auth/register", registerValidator, authController.register);
 app.post("/auth/login", loginValidator, authController.login);
-app.get("/users/refresh-token", authenticate, userController.refreshToken);
+app.get("/auth/books/:bookId", authController.getBook);
 
 app.use(errorMiddleware);
 
@@ -166,6 +168,59 @@ describe("POST /auth/login", () => {
     userService.findUserByEmail.mockRejectedValue(new Error("Database error"));
 
     const response = await request(app).post("/auth/login").send(inputData);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message");
+  });
+});
+
+describe("GET /auth/books/:bookId", () => {
+  it("should return a book successfully when the book exists", async () => {
+    const bookId = 1;
+
+    const existingBook = {
+      id: bookId,
+      title: "Sample Book",
+      detail: "Sample detail",
+      author: "Sample Author",
+      category: "Sample Category",
+    };
+
+    // Mock findBookById to return an existing book
+    bookService.findBookById.mockResolvedValue(existingBook);
+
+    const response = await request(app).get(`/auth/books/${bookId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(existingBook);
+  });
+
+  it("should return 404 if the book is not found", async () => {
+    const bookId = 1;
+
+    // Mock findBookById to return null (no book found)
+    bookService.findBookById.mockResolvedValue(null);
+
+    const response = await request(app).get(`/auth/books/${bookId}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("message", "Book not found");
+  });
+
+  it("should return 400 if the bookId is not provided", async () => {
+    const response = await request(app).get(`/auth/books/${undefined}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("message", "Book id is required");
+  });
+
+  it("should return 500 on any other errors", async () => {
+    const bookId = 1;
+
+    // Mock findBookById to throw an error
+    bookService.findBookById.mockRejectedValue(new Error("Database error"));
+
+    const response = await request(app).get(`/auth/books/${bookId}`);
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message");

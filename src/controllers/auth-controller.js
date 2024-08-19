@@ -1,4 +1,5 @@
 const prisma = require("../models/prisma");
+const bookService = require("../services/book-service");
 const hashService = require("../services/hash-service");
 const jwtService = require("../services/jwt-service");
 const userService = require("../services/user-service");
@@ -38,6 +39,28 @@ authController.login = async (req, res, next) => {
 
     const accessToken = jwtService.sign({ id: existingUser.id });
     res.json({ accessToken });
+  } catch (error) {
+    next(error);
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
+authController.getBook = async (req, res, next) => {
+  try {
+    const bookId = +req.params.bookId;
+    if (!bookId) {
+      createError(400, "Book id is required");
+    }
+
+    // Check if the book exists
+    const existingBook = await bookService.findBookById(bookId);
+
+    if (!existingBook) {
+      createError(404, "Book not found");
+    }
+
+    res.json(existingBook);
   } catch (error) {
     next(error);
   } finally {
