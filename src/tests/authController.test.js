@@ -8,6 +8,8 @@ const mapper = require("../utils/mapper");
 const { registerValidator, loginValidator } = require("../middlewares/validator");
 const { errorMiddleware } = require("../middlewares/errorMiddleware");
 const jwtService = require("../services/jwt-service");
+const { authenticate } = require("../middlewares/authenticate");
+const userController = require("../controllers/user-controller");
 
 const app = express();
 app.use(express.json());
@@ -18,6 +20,7 @@ jest.mock("../services/jwt-service");
 
 app.post("/auth/register", registerValidator, authController.register);
 app.post("/auth/login", loginValidator, authController.login);
+app.get("/users/refresh-token", authenticate, userController.refreshToken);
 
 app.use(errorMiddleware);
 
@@ -111,7 +114,7 @@ describe("POST /auth/login", () => {
     jwtService.sign.mockReturnValue("valid.jwt.token");
 
     const response = await request(app).post("/auth/login").send(inputData);
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("accessToken", "valid.jwt.token");
   });
@@ -168,5 +171,4 @@ describe("POST /auth/login", () => {
     expect(response.body).toHaveProperty("message");
   });
 });
-
 
