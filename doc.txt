@@ -1,0 +1,17 @@
+RESTful API:
+สร้าง RESTful API สำหรับระบบจัดการหนังสือในห้องสมุด โดยมีฟีเจอร์ดังนี้:
+
+
+เพิ่ม/แก้ไข/ลบ/ดูรายละเอียดหนังสือ
+ค้นหาหนังสือตามชื่อ, ผู้แต่ง, หมวดหมู่
+ระบบยืม-คืนหนังสือ
+แสดงรายการหนังสือที่ถูกยืมมากที่สุด
+
+
+- Authentication และ Authorization:
+พัฒนาระบบ login และ authorization สำหรับ API:
+
+
+ใช้ JWT (JSON Web Token) สำหรับ authentication
+มีระบบ role-based access control (RBAC)
+สามารถ refresh token ได้
