@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/app.js",
+    "dev": "pnpm jest && nodemon src/app.js",
     "resetDB": "node prisma/resetDB.js"
   },
   "prisma": {
@@ -28,6 +28,9 @@
     "multer": "1.4.5-lts.1"
   },
   "devDependencies": {
-    "prisma": "^5.18.0"
+    "jest": "^29.7.0",
+    "jest-mock": "^29.7.0",
+    "prisma": "^5.18.0",
+    "supertest": "^7.0.0"
   }
 }
