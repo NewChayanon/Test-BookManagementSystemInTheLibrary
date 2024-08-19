@@ -46,7 +46,7 @@ describe("POST /auth/register", () => {
     jest.spyOn(mapper, "registerMapper").mockReturnValue(registerResponse);
 
     const response = await request(app).post("/auth/register").send(inputData);
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(response.body).toEqual(registerResponse);
   });
 

@@ -9,3 +9,8 @@ exports.register = Joi.object({
     .pattern(/^[a-zA-Z0-9]{8,}$/),
   confirmPassword: Joi.string().required().valid(Joi.ref("password")).strip(),
 });
+
+exports.login = Joi.object({
+  email: Joi.string().required(),
+  password: Joi.string().required(),
+});
