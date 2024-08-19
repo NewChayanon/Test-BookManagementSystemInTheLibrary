@@ -14,10 +14,10 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  
-  roleId    Int
-  Role      Role        @relation(fields: [roleId], references: [id])
+  id Int @id @default(autoincrement())
+
+  roleId Int  @default(2)
+  Role   Role @relation(fields: [roleId], references: [id])
 
   email     String   @unique @db.VarChar(50)
   password  String   @db.VarChar(256)
@@ -40,25 +40,25 @@ enum RoleName {
 }
 
 model Book {
-  id         Int         @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   title      String
-  detail     String      @db.Text
+  detail     String   @db.Text
   author     String
   category   String
-  pubishedAt DateTime    @default(now()) @db.Timestamp(0)
-  updatedAt  DateTime    @updatedAt @db.Timestamp(0)
+  pubishedAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime @updatedAt @db.Timestamp(0)
 
-  borrowing  Borrowing[]
+  borrowing Borrowing[]
 }
 
 model Borrowing {
-  id         Int       @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  userId     Int
-  User       User      @relation(fields: [userId], references: [id])
+  userId Int
+  User   User @relation(fields: [userId], references: [id])
 
-  bookId     Int
-  Book       Book      @relation(fields: [bookId], references: [id])
+  bookId Int
+  Book   Book @relation(fields: [bookId], references: [id])
 
   borrowedAt DateTime  @default(now()) @db.Timestamp(0)
   returnedAt DateTime? @db.Timestamp(0)
