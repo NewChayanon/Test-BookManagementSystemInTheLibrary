@@ -1,7 +1,12 @@
-const prisma = require("../models/prisma")
+const prisma = require("../models/prisma");
 
-const bookService = {}
+const bookService = {};
 
-bookService.createBookByData = (data) => prisma.book.create({ data }),
+bookService.findBookById = (id) => prisma.book.findUnique({ where: { id } });
 
-module.exports = bookService
+bookService.createBookByData = (data) => prisma.book.create({ data });
+
+bookService.updateBookByIdAndData = (id, data) =>
+  prisma.book.update({ where: { id }, data });
+
+module.exports = bookService;
