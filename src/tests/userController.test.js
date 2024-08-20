@@ -8,7 +8,10 @@ const { errorMiddleware } = require("../middlewares/errorMiddleware");
 const userService = require("../services/user-service");
 const bookService = require("../services/book-service");
 const borrowingService = require("../services/borrowing-service");
-const { borrowingBookValidator } = require("../middlewares/validator");
+const {
+  borrowingBookValidator,
+  returnBookValidator,
+} = require("../middlewares/validator");
 const prisma = require("../models/prisma");
 
 const app = express();
@@ -31,6 +34,13 @@ app.post(
   authenticate,
   borrowingBookValidator,
   userController.borrowingBook
+);
+
+app.post(
+  "/users/borrowings/:bookId/return",
+  authenticate,
+  returnBookValidator,
+  userController.returnBook
 );
 
 app.use(errorMiddleware);
@@ -162,6 +172,97 @@ describe("POST /users/borrowings", () => {
       .post("/users/borrowings")
       .set("Authorization", "Bearer validToken")
       .send(borrowingData);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message");
+  });
+});
+
+describe("POST /users/borrowings/:bookId/return", () => {
+  const userId = 1;
+  const bookId = 1;
+
+  const user = { id: userId };
+  const borrowingData = {
+    id: 1,
+    userId,
+    bookId,
+    returnedAt: null,
+  };
+
+  // beforeEach(() => {
+  //   authenticate.mockImplementation((req, res, next) => {
+  //     req.user = user;
+  //     next();
+  //   });
+  // });
+
+  it("should return the book successfully", async () => {
+    bookService.findBookById.mockResolvedValue({ id: bookId, title: "Test Book"})
+
+    borrowingService.findFirstBorrowingByBookIdAndReturnedAt.mockResolvedValue(
+      borrowingData
+    );
+    borrowingService.updateReturnedAtById.mockResolvedValue({
+      ...borrowingData,
+      returnedAt: new Date(),
+    });
+
+    const response = await request(app)
+      .post(`/users/borrowings/${bookId}/return`)
+      .send({ userId, bookId });
+
+    expect(response.status).toBe(200);
+    expect(response.body.returnedAt).not.toBeNull();
+  });
+
+  it("should return 403 if the user is not allowed to return the book", async () => {
+    const anotherUserId = 2;
+    const borrowingDataForAnotherUser = { ...borrowingData, userId: anotherUserId };
+    borrowingService.findFirstBorrowingByBookIdAndReturnedAt.mockResolvedValue(
+      borrowingDataForAnotherUser
+    );
+
+    const response = await request(app)
+      .post(`/users/borrowings/${bookId}/return`)
+      .send({ userId, bookId });
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe("You can't return this book");
+  });
+
+  it("should return 404 if the book is not found", async () => {
+    bookService.findBookById.mockResolvedValue(null);
+
+    const response = await request(app)
+      .post(`/users/borrowings/${bookId}/return`)
+      .send({ userId, bookId });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Book not found");
+  });
+
+  it("should return 400 if the book is not borrowed yet", async () => {
+    bookService.findBookById.mockResolvedValue({ id: bookId, title: "Test Book"})
+
+    borrowingService.findFirstBorrowingByBookIdAndReturnedAt.mockResolvedValue(null);
+
+    const response = await request(app)
+      .post(`/users/borrowings/${bookId}/return`)
+      .send({ userId, bookId });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Book is not borrowed yet");
+  });
+
+  it("should return 500 on any other errors", async () => {
+    borrowingService.findFirstBorrowingByBookIdAndReturnedAt.mockRejectedValue(
+      new Error("Database error")
+    );
+
+    const response = await request(app)
+      .post(`/users/borrowings/${bookId}/return`)
+      .send({ userId, bookId });
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message");

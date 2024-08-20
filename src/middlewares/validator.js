@@ -1,7 +1,12 @@
 const { createError } = require("../utils/createError");
 const { createBook, editBook } = require("../validators/admin-validator");
 const { register, login, searchBook } = require("../validators/auth-validator");
-const { borrowingBook } = require("../validators/user-validator");
+const {
+  borrowingBook,
+  returnBookParams,
+  returnBookBody,
+  returnBook,
+} = require("../validators/user-validator");
 
 exports.registerValidator = (req, res, next) => {
   const { value, error } = register.validate(req.body);
@@ -55,19 +60,20 @@ exports.borrowingBookValidator = (req, res, next) => {
   }
   req.borrowing = value;
   next();
-}
+};
 
 exports.returnBookValidator = (req, res, next) => {
-  const { valueParams, errorParams } = returnBookParams.validate(req.params);
-  if (errorParams) {
-    createError(400, errorParams.details[0].message);
-  }
+  if (isNaN(req.params.bookId)) createError(400, "borrowingId  is required");
 
-  const { valueBody, errorBody } = returnBookBody.validate(req.body);
-  if (errorBody) {
-    createError(400, errorBody.details[0].message);
+  req.body.bookId = req.params.bookId;
+
+  const { value, error } = returnBook.validate(req.body);
+
+  if (error) {
+    createError(400, error.details[0].message);
   }
 
   req.borrowing = value;
+
   next();
-}
+};

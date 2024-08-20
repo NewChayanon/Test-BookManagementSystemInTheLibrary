@@ -6,6 +6,6 @@ const userRouter = express.Router();
 
 userRouter.get("/refresh-token", userController.refreshToken);
 userRouter.post("/borrowings", borrowingBookValidator,userController.borrowingBook);
-userRouter.post("/borrowings/:borrowingId/return", returnBookValidator);
+userRouter.post("/borrowings/:bookId/return", returnBookValidator,userController.returnBook);
 
 module.exports = userRouter;

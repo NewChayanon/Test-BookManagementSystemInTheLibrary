@@ -5,9 +5,7 @@ exports.borrowingBook = Joi.object({
   bookId: Joi.number().required(),
 });
 
-exports.returnBookParams = Joi.object({
-  borrowingId: Joi.number().required(),
-});
-exports.returnBookBody = Joi.object({
+exports.returnBook = Joi.object({
   userId: Joi.number().required(),
+  bookId: Joi.number().required(),
 });
