@@ -22,25 +22,39 @@ This project is a backend API system for managing books in a library. It provide
 2. **Install the dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
-3. **Set up the MySQL database:**
+3. **Create a .env file in the root directory of the project and configure the environment variables as described in the [Environment Variables](#environment-variables) section.**
 
-   Ensure you have a MySQL server running and create a database with the name specified in the .env file.
+4. **Run the database migration:**
 
-   ```sql
-   CREATE DATABASE bookManagementSystemInTheLibrary
-   ```
-
-4. **Migrate the database schema using Prisma:**
    ```bash
-   npx prisma migrate deploy
+   pnpm exec prisma db push
+   ```
+
+5. **Run the seed:**
+
+   ```bash
+   pnpm exec prisma db seed
+   ```
+
+6. **Start the development server:**
+
+   ```bash
+   pnpm dev
    ```
 
 ## Environment Variables
 
 The application requires a few environment variables to be set. You can configure these in a .env file in the root directory of the project. An example .env file is provided below:
+
+```bash
+DATABASE_URL="mysql://root:password@localhost:3306/bookManagementSystemInTheLibrary"
+DATABASE_NAME=bookManagementSystemInTheLibrary
+PORT_BACK_END=8888
+JWT_SECRET=TheSeCRET
+```
 
 - DATABASE_URL: The connection string for your MySQL database.
 - DATABASE_NAME: The name of the MySQL database.
@@ -52,7 +66,7 @@ The application requires a few environment variables to be set. You can configur
 1. **Start the development server:**
 
    ```bash
-   npx prisma migrate deploy
+   pnpm dev
    ```
 
    The backend API will be accessible at http://localhost:8888.
@@ -91,5 +105,6 @@ The API is organized into three main sections: authentication, user operations, 
 
 To run the tests, use the following command:
 
-    npm jest
-    
+```bash
+pnpm jest
+```
