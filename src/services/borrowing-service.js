@@ -8,4 +8,6 @@ borrowingService.findFirstBorrowingByBookIdAndReturnedAt = (bookId) =>
 borrowingService.deleteManyBorrowingByBookId = (bookId) =>
   prisma.borrowing.deleteMany({ where: { bookId } });
 
+borrowingService.createBorrowingByData = (data) => prisma.borrowing.create({ data })
+
 module.exports = borrowingService;

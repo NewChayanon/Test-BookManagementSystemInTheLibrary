@@ -5,6 +5,11 @@ const userController = require("../controllers/user-controller");
 const jwtService = require("../services/jwt-service");
 const { authenticate } = require("../middlewares/authenticate");
 const { errorMiddleware } = require("../middlewares/errorMiddleware");
+const userService = require("../services/user-service");
+const bookService = require("../services/book-service");
+const borrowingService = require("../services/borrowing-service");
+const { borrowingBookValidator } = require("../middlewares/validator");
+const prisma = require("../models/prisma");
 
 const app = express();
 app.use(express.json());
@@ -16,8 +21,18 @@ jest.mock("../middlewares/authenticate", () => ({
     next();
   },
 }));
+jest.mock("../services/user-service");
+jest.mock("../services/book-service");
+jest.mock("../services/borrowing-service");
 
 app.get("/users/refresh-token", authenticate, userController.refreshToken);
+app.post(
+  "/users/borrowings",
+  authenticate,
+  borrowingBookValidator,
+  userController.borrowingBook
+);
+
 app.use(errorMiddleware);
 
 describe("GET /users/refresh-token", () => {
@@ -49,5 +64,106 @@ describe("GET /users/refresh-token", () => {
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message", "Internal Server Error");
+  });
+});
+
+describe("POST /users/borrowings", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it("should borrow a book successfully", async () => {
+    const borrowingData = { userId: 1, bookId: 1 };
+
+    jestMock.spyOn(bookService, "findBookById").mockResolvedValue({
+      id: 1,
+      title: "Test Book",
+    });
+    jestMock
+      .spyOn(borrowingService, "findFirstBorrowingByBookIdAndReturnedAt")
+      .mockResolvedValue(null);
+    jestMock.spyOn(borrowingService, "createBorrowingByData").mockResolvedValue({
+      id: 1,
+      userId: 1,
+      bookId: 1,
+      borrowedAt: new Date(),
+      returnedAt: null,
+    });
+
+    const response = await request(app)
+      .post("/users/borrowings")
+      .set("Authorization", "Bearer validToken")
+      .send(borrowingData);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("id");
+    expect(response.body.bookId).toBe(1);
+    expect(response.body.userId).toBe(1);
+  });
+
+  it("should return 403 if user tries to borrow a book for another user", async () => {
+    const borrowingData = { userId: 2, bookId: 1 };
+
+    const response = await request(app)
+      .post("/users/borrowings")
+      .set("Authorization", "Bearer validToken")
+      .send(borrowingData);
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe("You can't borrow this book");
+  });
+
+  it("should return 404 if the book does not exist", async () => {
+    const borrowingData = { userId: 1, bookId: 99 };
+
+    jestMock.spyOn(bookService, "findBookById").mockResolvedValue(null);
+
+    const response = await request(app)
+      .post("/users/borrowings")
+      .set("Authorization", "Bearer validToken")
+      .send(borrowingData);
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Book not found");
+  });
+
+  it("should return 400 if the book is already borrowed", async () => {
+    const borrowingData = { userId: 1, bookId: 1 };
+
+    jestMock.spyOn(bookService, "findBookById").mockResolvedValue({
+      id: 1,
+      title: "Test Book",
+    });
+    jestMock
+      .spyOn(borrowingService, "findFirstBorrowingByBookIdAndReturnedAt")
+      .mockResolvedValue({ id: 1, bookId: 1, userId: 1, returnedAt: null });
+
+    const response = await request(app)
+      .post("/users/borrowings")
+      .set("Authorization", "Bearer validToken")
+      .send(borrowingData);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Book is already borrowed");
+  });
+
+  it("should return 500 on any other errors", async () => {
+    const borrowingData = { userId: 1, bookId: 1 };
+
+    jestMock
+      .spyOn(bookService, "findBookById")
+      .mockRejectedValue(new Error("Database error"));
+
+    const response = await request(app)
+      .post("/users/borrowings")
+      .set("Authorization", "Bearer validToken")
+      .send(borrowingData);
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("message");
   });
 });

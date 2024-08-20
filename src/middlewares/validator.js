@@ -49,10 +49,25 @@ exports.searchBookValidator = (req, res, next) => {
 };
 
 exports.borrowingBookValidator = (req, res, next) => {
-  const { value, error } = borrowingBook.validate(req.query);
+  const { value, error } = borrowingBook.validate(req.body);
   if (error) {
     createError(400, error.details[0].message);
   }
-  req.book = value;
+  req.borrowing = value;
+  next();
+}
+
+exports.returnBookValidator = (req, res, next) => {
+  const { valueParams, errorParams } = returnBookParams.validate(req.params);
+  if (errorParams) {
+    createError(400, errorParams.details[0].message);
+  }
+
+  const { valueBody, errorBody } = returnBookBody.validate(req.body);
+  if (errorBody) {
+    createError(400, errorBody.details[0].message);
+  }
+
+  req.borrowing = value;
   next();
 }
