@@ -27,10 +27,14 @@ This project is a backend API system for managing books in a library. It provide
 
 3. **Create a .env file in the root directory of the project and configure the environment variables as described in the [Environment Variables](#environment-variables) section.**
 
+   ```bash
+   pnpm exec prisma init
+   ```
+
 4. **Run the database migration:**
 
    ```bash
-   pnpm exec prisma db push
+   pnpm exec prisma migrate dev --name init
    ```
 
 5. **Run the seed:**
