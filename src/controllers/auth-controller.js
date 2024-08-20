@@ -1,10 +1,12 @@
 const prisma = require("../models/prisma");
 const bookService = require("../services/book-service");
+const borrowingService = require("../services/borrowing-service");
 const hashService = require("../services/hash-service");
 const jwtService = require("../services/jwt-service");
 const userService = require("../services/user-service");
 const { createError } = require("../utils/createError");
 const mapper = require("../utils/mapper");
+const { popularBook, sortPopularBook } = require("../utils/mostBorrowed");
 
 const authController = {};
 
@@ -71,7 +73,7 @@ authController.getBook = async (req, res, next) => {
 authController.searchBooks = async (req, res, next) => {
   try {
     const { title, author, category } = req.book;
-    
+
     if (!title && !author && !category)
       createError(400, "Please provide a search query!");
 
@@ -80,10 +82,34 @@ authController.searchBooks = async (req, res, next) => {
     if (author) filter.author = { contains: author };
     if (category) filter.category = { contains: category };
 
-    const books = await bookService.findBookByFilter(filter);
+    const books = await bookService.findBookAndBorrowingWhereReturnedAtIsNullByFilter(
+      filter
+    );
 
-    res.json(books);
+    const booksDTO = await mapper.searchBooksMapper(books);
+
+    res.json(booksDTO);
   } catch (error) {
+    next(error);
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
+authController.mostBorrowed = async (req, res, next) => {
+  try {
+    const books =
+      await bookService.findManyBookAndBorrowingWhereBorrowedAtIsLessThanNow();
+
+      if (!books.length) createError(404, "No books found!")
+    
+    const popularBooks = popularBook(books);
+    
+    const mostBorrowedBooks = sortPopularBook(popularBooks);
+    
+    res.json(mostBorrowedBooks[0]);
+  } catch (error) {
+    // console.log(error);
     next(error);
   } finally {
     await prisma.$disconnect();

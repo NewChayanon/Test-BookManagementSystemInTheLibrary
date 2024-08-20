@@ -9,7 +9,8 @@ const authRouter = express.Router();
 
 authRouter.post("/register", registerValidator, authController.register);
 authRouter.post("/login", loginValidator, authController.login);
+authRouter.get("/books", searchBookValidator, authController.searchBooks);
+authRouter.get("/books/most-borrowed", authController.mostBorrowed);
 authRouter.get("/books/:bookId", authController.getBook);
-authRouter.get("/books", searchBookValidator,authController.searchBooks);
 
 module.exports = authRouter;

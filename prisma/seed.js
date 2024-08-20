@@ -39,6 +39,24 @@ async function main() {
           category: categories[0],
         },
         {
+          title: "Book 1",
+          detail: "Detail for book 1",
+          author: "Author 1",
+          category: categories[0],
+        },
+        {
+          title: "Book 1",
+          detail: "Detail for book 1",
+          author: "Author 1",
+          category: categories[0],
+        },
+        {
+          title: "Book 2",
+          detail: "Detail for book 2",
+          author: "Author 2",
+          category: categories[1],
+        },
+        {
           title: "Book 2",
           detail: "Detail for book 2",
           author: "Author 2",
@@ -49,6 +67,18 @@ async function main() {
           detail: "Detail for book 3",
           author: "Author 3",
           category: categories[2],
+        },
+        {
+          title: "Book 4",
+          detail: "Detail for book 4",
+          author: "Author 4",
+          category: categories[3],
+        },
+        {
+          title: "Book 4",
+          detail: "Detail for book 4",
+          author: "Author 4",
+          category: categories[3],
         },
         {
           title: "Book 4",

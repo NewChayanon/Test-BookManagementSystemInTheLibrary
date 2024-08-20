@@ -27,8 +27,9 @@ jest.mock("../services/book-service");
 
 app.post("/auth/register", registerValidator, authController.register);
 app.post("/auth/login", loginValidator, authController.login);
-app.get("/auth/books/:bookId", authController.getBook);
 app.get("/auth/books", searchBookValidator, authController.searchBooks);
+app.get("/auth/books/most-borrowed", authController.mostBorrowed);
+app.get("/auth/books/:bookId", authController.getBook);
 
 app.use(errorMiddleware);
 
@@ -250,7 +251,20 @@ describe("GET /auth/books", () => {
         category: "Fantasy",
       },
     ];
-    bookService.findBookByFilter.mockResolvedValue(mockBooks);
+    const mockBooksMapper = [
+      {
+        title: "Harry Potter",
+        detail: "Harry Potter",
+        author: "J.K. Rowling",
+        category: "Fantasy",
+        statusbar: "Available",
+      },
+    ];
+    bookService.findBookAndBorrowingWhereReturnedAtIsNullByFilter.mockResolvedValue(
+      mockBooks
+    );
+
+    jest.spyOn(mapper, "searchBooksMapper").mockReturnValue(mockBooksMapper);
 
     const response = await request(app).get("/auth/books").query({ title: "Harry" });
 
@@ -262,9 +276,23 @@ describe("GET /auth/books", () => {
     const mockBooks = [
       { title: "The Great Gatsby", author: "F. Scott Fitzgerald", category: "Classic" },
     ];
-    bookService.findBookByFilter.mockResolvedValue(mockBooks);
+    const mockBooksMapper = [
+      {
+        title: "The Great Gatsby",
+        author: "F. Scott Fitzgerald",
+        category: "Classic",
+        statusbar: "Available",
+      },
+    ];
+    bookService.findBookAndBorrowingWhereReturnedAtIsNullByFilter.mockResolvedValue(
+      mockBooks
+    );
 
-    const response = await request(app).get("/auth/books").query({ author: "Fitzgerald" });
+    jest.spyOn(mapper, "searchBooksMapper").mockReturnValue(mockBooksMapper);
+
+    const response = await request(app)
+      .get("/auth/books")
+      .query({ author: "Fitzgerald" });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveLength(1);
@@ -274,7 +302,20 @@ describe("GET /auth/books", () => {
     const mockBooks = [
       { title: "Harry Potter", author: "J.K. Rowling", category: "Fantasy" },
     ];
-    bookService.findBookByFilter.mockResolvedValue(mockBooks);
+    const mockBooksMapper = [
+      {
+        title: "Harry Potter",
+        detail: "Harry Potter",
+        author: "J.K. Rowling",
+        category: "Fantasy",
+        statusbar: "Available",
+      },
+    ];
+    bookService.findBookAndBorrowingWhereReturnedAtIsNullByFilter.mockResolvedValue(
+      mockBooks
+    );
+
+    jest.spyOn(mapper, "searchBooksMapper").mockReturnValue(mockBooksMapper);
 
     const response = await request(app).get("/auth/books").query({ category: "Fantasy" });
 
@@ -283,21 +324,93 @@ describe("GET /auth/books", () => {
     expect(response.body[0].category).toBe("Fantasy");
   });
   it("should return an empty array if no books match the query", async () => {
-    bookService.findBookByFilter.mockResolvedValue([]);
+    bookService.findBookAndBorrowingWhereReturnedAtIsNullByFilter.mockResolvedValue([]);
 
-    const response = await request(app).get("/auth/books").query({ title: "Nonexistent" });
+    jest.spyOn(mapper, "searchBooksMapper").mockReturnValue([]);
+
+    const response = await request(app)
+      .get("/auth/books")
+      .query({ title: "Nonexistent" });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveLength(0);
   });
   it("should return 500 on any other errors", async () => {
-   
-     bookService.findBookByFilter.mockRejectedValue(new Error("Database error"));
+    bookService.findBookAndBorrowingWhereReturnedAtIsNullByFilter.mockRejectedValue(
+      new Error("Database error")
+    );
 
     const response = await request(app).get("/auth/books").query({ title: "Harry" });
 
     expect(response.statusCode).toBe(500);
     expect(response.body).toHaveProperty("message");
+  });
+});
 
+describe("GET /auth/books/most-borrowed", () => {
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it("should return the most borrowed book", async () => {
+    const books = [
+      {
+        id: 1,
+        title: "Book A",
+        detail: "Details of Book A",
+        author: "Author A",
+        category: "Category A",
+        borrowing: [{ id: 1, borrowedAt: new Date(), returnedAt: null }],
+      },
+      {
+        id: 2,
+        title: "Book A",
+        detail: "Details of Book A",
+        author: "Author A",
+        category: "Category A",
+        borrowing: [{ id: 2, borrowedAt: new Date(), returnedAt: null }],
+      },
+      {
+        id: 3,
+        title: "Book B",
+        detail: "Details of Book B",
+        author: "Author B",
+        category: "Category B",
+        borrowing: [{ id: 3, borrowedAt: new Date(), returnedAt: null }],
+      },
+    ];
+
+    bookService.findManyBookAndBorrowingWhereBorrowedAtIsLessThanNow.mockResolvedValue(books);
+
+    const response = await request(app).get("/auth/books/most-borrowed").expect(200);
+
+    expect(response.body).toEqual({
+      title: "Book A",
+      detail: "Details of Book A",
+      author: "Author A",
+      category: "Category A",
+      borrowCount: 2,
+      popular: 2,
+    });
+  });
+
+  it("should return an empty object when there are no books", async () => {
+    bookService.findManyBookAndBorrowingWhereBorrowedAtIsLessThanNow.mockResolvedValue([]);
+
+    const response = await request(app).get("/auth/books/most-borrowed").expect(404);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe("No books found!");
+    expect(response.body).toHaveProperty("message", "No books found!");
+  });
+
+  it("should handle errors gracefully", async () => {
+    bookService.findManyBookAndBorrowingWhereBorrowedAtIsLessThanNow.mockRejectedValue(
+      new Error("Database error")
+    );
+
+    const response = await request(app).get("/auth/books/most-borrowed").expect(500);
+
+    expect(response.body).toHaveProperty("message", "Database error");
   });
 });

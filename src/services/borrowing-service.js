@@ -13,4 +13,13 @@ borrowingService.updateReturnedAtById = (id) =>
 borrowingService.deleteManyBorrowingByBookId = (bookId) =>
   prisma.borrowing.deleteMany({ where: { bookId } });
 
+borrowingService.groupByBorrowingAndCountByBookId = () =>
+  prisma.borrowing.groupBy({
+    by: ["bookId"],
+    _count: {
+      bookId: true,
+    },
+  
+  });
+
 module.exports = borrowingService;

@@ -66,7 +66,6 @@ userController.returnBook = async (req, res, next) => {
 
     res.json(returnedBook)
   } catch (error) {
-    console.log(error)
     next(error);
   } finally {
     await prisma.$disconnect();
