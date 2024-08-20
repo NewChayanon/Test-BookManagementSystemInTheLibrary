@@ -5,7 +5,6 @@ const userController = require("../controllers/user-controller");
 const jwtService = require("../services/jwt-service");
 const { authenticate } = require("../middlewares/authenticate");
 const { errorMiddleware } = require("../middlewares/errorMiddleware");
-const userService = require("../services/user-service");
 const bookService = require("../services/book-service");
 const borrowingService = require("../services/borrowing-service");
 const {
@@ -182,7 +181,6 @@ describe("POST /users/borrowings/:bookId/return", () => {
   const userId = 1;
   const bookId = 1;
 
-  const user = { id: userId };
   const borrowingData = {
     id: 1,
     userId,

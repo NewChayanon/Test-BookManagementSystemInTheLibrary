@@ -3,8 +3,6 @@ const { createBook, editBook } = require("../validators/admin-validator");
 const { register, login, searchBook } = require("../validators/auth-validator");
 const {
   borrowingBook,
-  returnBookParams,
-  returnBookBody,
   returnBook,
 } = require("../validators/user-validator");
 

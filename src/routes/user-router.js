@@ -1,6 +1,5 @@
 const express = require("express");
 const userController = require("../controllers/user-controller");
-const { borrowing } = require("../models/prisma");
 const { borrowingBookValidator, returnBookValidator } = require("../middlewares/validator");
 const userRouter = express.Router();
 

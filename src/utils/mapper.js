@@ -1,5 +1,3 @@
-const borrowingService = require("../services/borrowing-service");
-
 const mapper = {};
 
 mapper.registerMapper = (data) => ({ id: data.id, email: data.email });

@@ -1,6 +1,5 @@
 const request = require("supertest");
 const express = require("express");
-const jestMock = require("jest-mock");
 const userService = require("../services/user-service");
 const hashService = require("../services/hash-service");
 const authController = require("../controllers/auth-controller");
@@ -12,8 +11,6 @@ const {
 } = require("../middlewares/validator");
 const { errorMiddleware } = require("../middlewares/errorMiddleware");
 const jwtService = require("../services/jwt-service");
-const { authenticate } = require("../middlewares/authenticate");
-const userController = require("../controllers/user-controller");
 const bookService = require("../services/book-service");
 const prisma = require("../models/prisma");
 

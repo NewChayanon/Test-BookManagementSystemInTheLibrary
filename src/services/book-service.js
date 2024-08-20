@@ -1,4 +1,3 @@
-const { not } = require("joi");
 const prisma = require("../models/prisma");
 
 const bookService = {};

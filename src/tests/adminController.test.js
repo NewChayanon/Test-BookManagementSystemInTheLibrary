@@ -1,6 +1,5 @@
 const request = require("supertest");
 const express = require("express");
-const jestMock = require("jest-mock");
 const { authenticate } = require("../middlewares/authenticate");
 const { isAdmin } = require("../middlewares/isAdmin");
 const { createBookValidator } = require("../middlewares/validator");
