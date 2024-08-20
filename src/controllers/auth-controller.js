@@ -68,4 +68,26 @@ authController.getBook = async (req, res, next) => {
   }
 };
 
+authController.searchBooks = async (req, res, next) => {
+  try {
+    const { title, author, category } = req.book;
+    
+    if (!title && !author && !category)
+      createError(400, "Please provide a search query!");
+
+    const filter = {};
+    if (title) filter.title = { contains: title };
+    if (author) filter.author = { contains: author };
+    if (category) filter.category = { contains: category };
+
+    const books = await bookService.findBookByFilter(filter);
+
+    res.json(books);
+  } catch (error) {
+    next(error);
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
 module.exports = authController;

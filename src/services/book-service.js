@@ -3,6 +3,7 @@ const prisma = require("../models/prisma");
 const bookService = {};
 
 bookService.findBookById = (id) => prisma.book.findUnique({ where: { id } });
+bookService.findBookByFilter = (filter) => prisma.book.findMany({ where: filter });
 
 bookService.createBookByData = (data) => prisma.book.create({ data });
 

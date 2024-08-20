@@ -5,12 +5,17 @@ const userService = require("../services/user-service");
 const hashService = require("../services/hash-service");
 const authController = require("../controllers/auth-controller");
 const mapper = require("../utils/mapper");
-const { registerValidator, loginValidator } = require("../middlewares/validator");
+const {
+  registerValidator,
+  loginValidator,
+  searchBookValidator,
+} = require("../middlewares/validator");
 const { errorMiddleware } = require("../middlewares/errorMiddleware");
 const jwtService = require("../services/jwt-service");
 const { authenticate } = require("../middlewares/authenticate");
 const userController = require("../controllers/user-controller");
 const bookService = require("../services/book-service");
+const prisma = require("../models/prisma");
 
 const app = express();
 app.use(express.json());
@@ -23,6 +28,7 @@ jest.mock("../services/book-service");
 app.post("/auth/register", registerValidator, authController.register);
 app.post("/auth/login", loginValidator, authController.login);
 app.get("/auth/books/:bookId", authController.getBook);
+app.get("/auth/books", searchBookValidator, authController.searchBooks);
 
 app.use(errorMiddleware);
 
@@ -224,5 +230,74 @@ describe("GET /auth/books/:bookId", () => {
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty("message");
+  });
+});
+
+describe("GET /auth/books", () => {
+  it("should return 400 if no search query is provided", async () => {
+    const response = await request(app).get("/auth/books");
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.message).toBe("Please provide a search query!");
+  });
+
+  it("should return books based on the title", async () => {
+    const mockBooks = [
+      {
+        title: "Harry Potter",
+        detail: "Harry Potter",
+        author: "J.K. Rowling",
+        category: "Fantasy",
+      },
+    ];
+    bookService.findBookByFilter.mockResolvedValue(mockBooks);
+
+    const response = await request(app).get("/auth/books").query({ title: "Harry" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].title).toBe("Harry Potter");
+  });
+  it("should return books based on the author", async () => {
+    const mockBooks = [
+      { title: "The Great Gatsby", author: "F. Scott Fitzgerald", category: "Classic" },
+    ];
+    bookService.findBookByFilter.mockResolvedValue(mockBooks);
+
+    const response = await request(app).get("/auth/books").query({ author: "Fitzgerald" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].author).toBe("F. Scott Fitzgerald");
+  });
+  it("should return books based on the category", async () => {
+    const mockBooks = [
+      { title: "Harry Potter", author: "J.K. Rowling", category: "Fantasy" },
+    ];
+    bookService.findBookByFilter.mockResolvedValue(mockBooks);
+
+    const response = await request(app).get("/auth/books").query({ category: "Fantasy" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].category).toBe("Fantasy");
+  });
+  it("should return an empty array if no books match the query", async () => {
+    bookService.findBookByFilter.mockResolvedValue([]);
+
+    const response = await request(app).get("/auth/books").query({ title: "Nonexistent" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveLength(0);
+  });
+  it("should return 500 on any other errors", async () => {
+   
+     bookService.findBookByFilter.mockRejectedValue(new Error("Database error"));
+
+    const response = await request(app).get("/auth/books").query({ title: "Harry" });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.body).toHaveProperty("message");
+
   });
 });

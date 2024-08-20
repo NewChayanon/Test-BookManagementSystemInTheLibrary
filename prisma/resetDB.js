@@ -3,8 +3,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function run() {
-  await prisma.$executeRawUnsafe(`DROP Database bookManagementSystemInTheLibrary`);
-  await prisma.$executeRawUnsafe(`CREATE Database bookManagementSystemInTheLibrary`);
+  await prisma.$executeRawUnsafe(`DROP Database ${process.env.DATABASE_NAME}`);
+  await prisma.$executeRawUnsafe(`CREATE Database ${process.env.DATABASE_NAME}`);
 }
 console.log("Reset DB..");
 run();

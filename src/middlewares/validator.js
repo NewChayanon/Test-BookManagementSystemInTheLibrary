@@ -1,6 +1,7 @@
 const { createError } = require("../utils/createError");
 const { createBook, editBook } = require("../validators/admin-validator");
-const { register, login } = require("../validators/auth-validator");
+const { register, login, searchBook } = require("../validators/auth-validator");
+const { borrowingBook } = require("../validators/user-validator");
 
 exports.registerValidator = (req, res, next) => {
   const { value, error } = register.validate(req.body);
@@ -37,3 +38,21 @@ exports.editBookValidator = (req, res, next) => {
   req.book = value;
   next();
 };
+
+exports.searchBookValidator = (req, res, next) => {
+  const { value, error } = searchBook.validate(req.query);
+  if (error) {
+    createError(400, error.details[0].message);
+  }
+  req.book = value;
+  next();
+};
+
+exports.borrowingBookValidator = (req, res, next) => {
+  const { value, error } = borrowingBook.validate(req.query);
+  if (error) {
+    createError(400, error.details[0].message);
+  }
+  req.book = value;
+  next();
+}

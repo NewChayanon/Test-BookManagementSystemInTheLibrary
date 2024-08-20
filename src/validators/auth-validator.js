@@ -14,3 +14,9 @@ exports.login = Joi.object({
   email: Joi.string().required(),
   password: Joi.string().required(),
 });
+
+exports.searchBook = Joi.object({
+  title: Joi.string(),
+  author: Joi.string(),
+  category: Joi.string(),
+});
